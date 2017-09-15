@@ -8,8 +8,10 @@ from matplotlib.image import imread
 import io
 import math
 import numpy as np
+from PIL import Image
+from pyproj import Proj, transform
 
-class test:
+class SentinelHubWebService:
     
     def __init__(self, lat, lon, zoom=10):
         
@@ -36,12 +38,12 @@ class test:
         
         self.x, self.y = self.deg2num(self.lat_center, self.lon_center, self.zoom)
         
-        wmtsOut = wmts.gettile(layer=self.layer,
-                            tilematrixset='PopularWebMercator256',
-                            tilematrix=self.zoom,
-                            row=self.y,
-                            column=self.x,
-                            format="image/png")
+        self.wmtsOut = wmts.gettile(layer=self.layer,
+                                    tilematrixset='PopularWebMercator256',
+                                    tilematrix=self.zoom,
+                                    row=self.y,
+                                    column=self.x,
+                                    format="image/png")
         
         self.imgArr = imread(io.BytesIO(wmtsOut.read()))
         
@@ -55,7 +57,6 @@ class test:
         
     def wcsRequest(self, layer='AGRICULTURE'):
         
-        from PIL import Image
         
         self.layer = layer
         wcs_url = 'https://services.sentinel-hub.com/v1/wcs/0a968a13-5617-485d-8803-34b0577fd7c7'
@@ -65,7 +66,6 @@ class test:
         self.lat_max, self.lon_min = self.num2deg(self.x, self.y, self.zoom)
         self.lat_min, self.lon_max = self.num2deg(self.x+1, self.y+1, self.zoom)
         
-        from pyproj import Proj, transform
 
         inProj = Proj(init='epsg:4326')
         outProj = Proj(init='epsg:3857')
@@ -74,14 +74,14 @@ class test:
         
         bb=(x1, y1, x2, y2)
         
-        wcsOut = wcs.getCoverage(identifier=self.layer,
-                                 time=None,
-                                 width=1000,
-                                 height=1000,
-                                 bbox = bb,
-                                 format = 'GeoTIFF')
+        self.wcsOut = wcs.getCoverage(identifier=self.layer,
+                                      time=None,
+                                      width=800,
+                                      height=800,
+                                      bbox = bb,
+                                      format = 'GeoTIFF')
         
-        self.imgTiff = Image.open(wcsOut)
+        self.imgTiff = Image.open(self.wcsOut)
         self.imgArr = np.array(self.imgTiff)
         
         imgurl = image_to_url(image=self.imgArr)
@@ -89,12 +89,15 @@ class test:
                                         bounds=[[self.lat_min, self.lon_min],
                                                 [self.lat_max, self.lon_max]]))
         
-    def mapUpdate(self):
+    def updateMap(self, service='wcs'):
         
         self.lat_center, self.lon_center = self.map.center
         
-        self.wcsRequest()
-    
+        if service=='wcs':
+            self.wcsRequest()
+        elif service=='wmts':
+            self.wmtsRequest()
+        
     def deg2num(self, lat, lon, zoom):
         
         lat_rad = math.radians(lat)
