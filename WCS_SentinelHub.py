@@ -33,7 +33,8 @@ class SentinelHubWebService:
                   
         self.layer = layer  
         
-        wmts_url = 'https://services.sentinel-hub.com/v1/wmts/0a968a13-5617-485d-8803-34b0577fd7c7'
+        ID = 'your ID'
+        wmts_url = 'https://services.sentinel-hub.com/ogc/wmts/'+ID
         wmts = WebMapTileService(wmts_url)
         
         self.x, self.y = self.deg2num(self.lat_center, self.lon_center, self.zoom)
@@ -59,7 +60,8 @@ class SentinelHubWebService:
         
         
         self.layer = layer
-        wcs_url = 'https://services.sentinel-hub.com/v1/wcs/0a968a13-5617-485d-8803-34b0577fd7c7'
+        ID = 'your ID'
+        wcs_url = 'https://services.sentinel-hub.com/ogc/wcs/'+ID
         wcs = WebCoverageService(wcs_url, version='1.0.0')
         
         self.x, self.y = self.deg2num(self.lat_center, self.lon_center, self.zoom)
